@@ -1,0 +1,35 @@
+{% extends 'base.html' %}
+
+{% block title %}Отчеты - Система учета{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <h1 class="page-title">Отчеты</h1>
+</div>
+
+<div class="stats-grid">
+    <div class="card">
+        <h3 class="card-title">Проекты по срокам сдачи</h3>
+        <p style="color: var(--text-secondary); margin: 1rem 0;">
+            Список всех проектов с руководителями, отсортированный по дате окончания
+        </p>
+        <a href="{{ url_for('reports.projects_by_deadline') }}" class="btn btn-primary">Открыть отчет</a>
+    </div>
+    
+    <div class="card">
+        <h3 class="card-title">Состав команды проекта</h3>
+        <p style="color: var(--text-secondary); margin: 1rem 0;">
+            Детальная информация о команде выбранного проекта с датами вступления
+        </p>
+        <a href="{{ url_for('reports.project_team') }}" class="btn btn-primary">Открыть отчет</a>
+    </div>
+    
+    <div class="card">
+        <h3 class="card-title">Хронология событий</h3>
+        <p style="color: var(--text-secondary); margin: 1rem 0;">
+            История всех событий и действий по проектам в хронологическом порядке
+        </p>
+        <a href="{{ url_for('reports.activity_timeline') }}" class="btn btn-primary">Открыть отчет</a>
+    </div>
+</div>
+{% endblock %}

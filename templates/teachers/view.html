@@ -1,0 +1,94 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ teacher.last_name }} {{ teacher.first_name }} - Система учета{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <h1 class="page-title">{{ teacher.last_name }} {{ teacher.first_name }} {{ teacher.middle_name or '' }}</h1>
+    <div class="btn-group">
+        <a href="{{ url_for('teachers.edit_teacher', teacher_id=teacher.id) }}" class="btn btn-secondary">Редактировать</a>
+        <form method="POST" action="{{ url_for('teachers.delete_teacher', teacher_id=teacher.id) }}" style="display: inline;" 
+              onsubmit="return confirm('Удалить преподавателя?')">
+            <button type="submit" class="btn btn-danger">Удалить</button>
+        </form>
+    </div>
+</div>
+
+
+<div class="card">
+    <div class="detail-grid">
+        <div>
+            <div class="detail-item">
+                <div class="detail-label">Должность</div>
+                <div class="detail-value">{{ teacher.position or 'Не указана' }}</div>
+            </div>
+            
+            <div class="detail-item">
+                <div class="detail-label">Кафедра</div>
+                <div class="detail-value">{{ teacher.department_name or 'Не указана' }}</div>
+            </div>
+        </div>
+        
+        <div>
+            <div class="detail-item">
+                <div class="detail-label">Email</div>
+                <div class="detail-value">{{ teacher.email }}</div>
+            </div>
+            
+            <div class="detail-item">
+                <div class="detail-label">Телефон</div>
+                <div class="detail-value">{{ teacher.phone or 'Не указан' }}</div>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+<div class="section">
+    <div class="card">
+        <div class="card-header">
+            <h2 class="card-title">Проекты под руководством ({{ projects|length }})</h2>
+        </div>
+        
+        {% if projects %}
+        <div class="table-container">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Проект</th>
+                        <th>Период</th>
+                        <th>Команда</th>
+                        <th>Статус</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for project in projects %}
+                    <tr>
+                        <td>
+                            <a href="{{ url_for('projects.view_project', project_id=project.id) }}" class="link">
+                                {{ project.title }}
+                            </a>
+                        </td>
+                        <td>
+                            {{ project.start_date.strftime('%d.%m.%Y') if project.start_date else '-' }} - 
+                            {{ project.end_date.strftime('%d.%m.%Y') if project.end_date else '-' }}
+                        </td>
+                        <td>{{ project.team_count }} чел.</td>
+                        <td>
+                            <span class="badge badge-status" style="background-color: {{ project.status_color or '#6B7280' }}">
+                                {{ project.status or 'Не указан' }}
+                            </span>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% else %}
+        <p style="color: var(--text-secondary);">Нет проектов под руководством</p>
+        {% endif %}
+    </div>
+</div>
+
+<a href="{{ url_for('teachers.list_teachers') }}" class="btn btn-secondary">Назад к списку</a>
+{% endblock %}

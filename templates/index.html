@@ -1,0 +1,140 @@
+{% extends 'base.html' %}
+
+{% block title %}Главная - Система учета проектных работ{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <h1 class="page-title">Панель управления</h1>
+</div>
+
+
+<div class="stats-grid">
+    <div class="stat-card">
+        <div class="stat-label">{% if is_student_dashboard %}Моих проектов{% else %}Всего проектов{% endif %}</div>
+        <div class="stat-value primary">{{ projects_stats.total or 0 }}</div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-label">{% if is_student_dashboard %}Моих задач{% else %}В работе{% endif %}</div>
+        <div class="stat-value warning">{% if is_student_dashboard %}{{ tasks_stats.total or 0 }}{% else %}{{ projects_stats.in_progress or 0 }}{% endif %}</div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-label">{% if is_student_dashboard %}Завершенных задач{% else %}Завершено{% endif %}</div>
+        <div class="stat-value success">{% if is_student_dashboard %}{{ tasks_stats.completed or 0 }}{% else %}{{ projects_stats.completed or 0 }}{% endif %}</div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-label">{% if is_student_dashboard %}Однокомандников{% else %}Студентов{% endif %}</div>
+        <div class="stat-value">{{ people_stats.students or 0 }}</div>
+    </div>
+</div>
+
+<div class="detail-grid">
+    
+    <div class="card">
+        <div class="card-header">
+            <h2 class="card-title">{% if is_student_dashboard %}Мои ближайшие дедлайны{% else %}Ближайшие дедлайны{% endif %}</h2>
+            <a href="{{ url_for('tasks.list_tasks') if is_student_dashboard else url_for('projects.list_projects') }}" class="btn btn-secondary btn-sm">
+                {% if is_student_dashboard %}Все задачи{% else %}Все проекты{% endif %}
+            </a>
+        </div>
+        
+        {% if upcoming_deadlines %}
+        <div class="table-container">
+            <table>
+                <thead>
+                    <tr>
+                        <th>{% if is_student_dashboard %}Задача{% else %}Проект{% endif %}</th>
+                        {% if is_student_dashboard %}
+                        <th>Проект</th>
+                        {% endif %}
+                        <th>Срок сдачи</th>
+                        <th>Статус</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for project in upcoming_deadlines %}
+                    <tr>
+                        <td>
+                            <a href="{{ url_for('tasks.view_task', task_id=project.id) if is_student_dashboard else url_for('projects.view_project', project_id=project.id) }}" class="link">
+                                {{ project.title }}
+                            </a>
+                        </td>
+                        {% if is_student_dashboard %}
+                        <td>{{ project.project_title }}</td>
+                        {% endif %}
+                        <td>{{ project.end_date.strftime('%d.%m.%Y') if project.end_date else '-' }}</td>
+                        <td>
+                            <span class="badge badge-status" style="background-color: {{ project.status_color or '#6B7280' }}">
+                                {{ project.status or 'Не указан' }}
+                            </span>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% else %}
+        <div class="empty-state">
+            <p>Нет предстоящих дедлайнов</p>
+        </div>
+        {% endif %}
+    </div>
+
+    
+    <div class="card">
+        <div class="card-header">
+            <h2 class="card-title">Последняя активность</h2>
+            {% if can_view_reports %}
+            <a href="{{ url_for('reports.activity_timeline') }}" class="btn btn-secondary btn-sm">Все события</a>
+            {% endif %}
+        </div>
+        
+        {% if activities %}
+        <ul class="activity-list">
+            {% for activity in activities %}
+            <li class="activity-item">
+                <div class="activity-icon">
+                    {% if 'created' in activity.action_type %}
+                    &#43;
+                    {% elif 'completed' in activity.action_type %}
+                    &#10003;
+                    {% else %}
+                    &#9679;
+                    {% endif %}
+                </div>
+                <div class="activity-content">
+                    <div class="activity-text">{{ activity.description }}</div>
+                    <div class="activity-time">
+                        {{ activity.actor_name or 'Система' }} &middot; 
+                        {{ activity.created_at.strftime('%d.%m.%Y %H:%M') if activity.created_at else '' }}
+                    </div>
+                </div>
+            </li>
+            {% endfor %}
+        </ul>
+        {% else %}
+        <div class="empty-state">
+            <p>Нет записей активности</p>
+        </div>
+        {% endif %}
+    </div>
+</div>
+
+
+<div class="card">
+    <div class="card-header">
+        <h2 class="card-title">Быстрые действия</h2>
+    </div>
+    <div class="btn-group">
+        {% if can_manage_projects %}
+        <a href="{{ url_for('projects.create_project') }}" class="btn btn-primary">Создать проект</a>
+        <a href="{{ url_for('tasks.create_task') }}" class="btn btn-secondary">Добавить задачу</a>
+        {% endif %}
+        {% if can_manage_users %}
+        <a href="{{ url_for('students.create_student') }}" class="btn btn-secondary">Добавить студента</a>
+        {% endif %}
+        {% if can_view_reports %}
+        <a href="{{ url_for('reports.reports_index') }}" class="btn btn-secondary">Отчеты</a>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

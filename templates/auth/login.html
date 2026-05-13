@@ -1,0 +1,69 @@
+{% extends 'base.html' %}
+
+{% block title %}Вход в систему{% endblock %}
+
+{% block content %}
+<div class="card auth-card">
+    <div class="card-header">
+        <h1 class="card-title">Вход в систему</h1>
+    </div>
+    <form method="post">
+        <div class="form-group">
+            <label class="form-label" for="role">Роль</label>
+            <select class="form-control" id="role" name="role" required>
+                <option value="">Выберите роль</option>
+                {% for key, value in roles.items() %}
+                <option value="{{ key }}">{{ value }}</option>
+                {% endfor %}
+            </select>
+        </div>
+
+        <div class="form-group">
+            <label class="form-label" for="user_id">Пользователь</label>
+            <select class="form-control" id="user_id" name="user_id">
+                <option value="">Выберите пользователя (для администратора не требуется)</option>
+
+                {% for student in students %}
+                <option value="{{ student.id }}" data-role="student">{{ student.full_name.strip() }}</option>
+                {% endfor %}
+
+                {% for teacher in teachers %}
+                <option value="{{ teacher.id }}" data-role="teacher">{{ teacher.full_name.strip() }}</option>
+                {% endfor %}
+            </select>
+        </div>
+
+        <div class="btn-group">
+            <button type="submit" class="btn btn-primary">Войти</button>
+        </div>
+    </form>
+</div>
+
+<script>
+    (function () {
+        const roleSelect = document.getElementById('role');
+        const userSelect = document.getElementById('user_id');
+        const allOptions = Array.from(userSelect.querySelectorAll('option[data-role]'));
+        const defaultOption = userSelect.querySelector('option:not([data-role])');
+
+        function updateUserOptions() {
+            const selectedRole = roleSelect.value;
+            userSelect.innerHTML = '';
+            userSelect.appendChild(defaultOption);
+            defaultOption.selected = true;
+
+            allOptions.forEach((option) => {
+                if (option.dataset.role === selectedRole) {
+                    userSelect.appendChild(option);
+                }
+            });
+
+            userSelect.required = selectedRole === 'student' || selectedRole === 'teacher';
+            userSelect.disabled = selectedRole === 'admin' || !selectedRole;
+        }
+
+        roleSelect.addEventListener('change', updateUserOptions);
+        updateUserOptions();
+    })();
+</script>
+{% endblock %}

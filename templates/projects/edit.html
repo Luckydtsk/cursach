@@ -1,0 +1,71 @@
+{% extends 'base.html' %}
+
+{% block title %}Редактирование: {{ project.title }} - Система учета{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <h1 class="page-title">Редактирование проекта</h1>
+    <a href="{{ url_for('projects.view_project', project_id=project.id) }}" class="btn btn-secondary">Назад</a>
+</div>
+
+<div class="card">
+    <form method="POST" action="{{ url_for('projects.edit_project', project_id=project.id) }}">
+        <div class="form-group">
+            <label class="form-label">Название проекта *</label>
+            <input type="text" name="title" class="form-control" required value="{{ project.title }}">
+        </div>
+        
+        <div class="form-group">
+            <label class="form-label">Описание</label>
+            <textarea name="description" class="form-control">{{ project.description or '' }}</textarea>
+        </div>
+        
+        <div class="form-row">
+            <div class="form-group">
+                <label class="form-label">Дата начала *</label>
+                <input type="date" name="start_date" class="form-control" required 
+                       value="{{ project.start_date.strftime('%Y-%m-%d') if project.start_date else '' }}">
+            </div>
+            
+            <div class="form-group">
+                <label class="form-label">Дата окончания *</label>
+                <input type="date" name="end_date" class="form-control" required
+                       value="{{ project.end_date.strftime('%Y-%m-%d') if project.end_date else '' }}">
+            </div>
+        </div>
+        
+        <div class="form-row">
+            <div class="form-group">
+                <label class="form-label">Статус</label>
+                <select name="status_id" class="form-control">
+                    <option value="">Выберите статус</option>
+                    {% for status in statuses %}
+                    <option value="{{ status.id }}" {% if project.status_id == status.id %}selected{% endif %}>
+                        {{ status.name }}
+                    </option>
+                    {% endfor %}
+                </select>
+            </div>
+            
+            {% if current_user.role == ROLE_ADMIN %}
+                <div class="form-group">
+                    <label class="form-label">Руководитель</label>
+                    <select name="supervisor_id" class="form-control">
+                        <option value="">Выберите руководителя</option>
+                        {% for teacher in teachers %}
+                        <option value="{{ teacher.id }}" {% if project.supervisor_id == teacher.id %}selected{% endif %}>
+                            {{ teacher.full_name }}
+                        </option>
+                        {% endfor %}
+                    </select>
+                </div>
+            {% endif %}
+        </div>
+        
+        <div class="btn-group">
+            <button type="submit" class="btn btn-primary">Сохранить изменения</button>
+            <a href="{{ url_for('projects.view_project', project_id=project.id) }}" class="btn btn-secondary">Отмена</a>
+        </div>
+    </form>
+</div>
+{% endblock %}

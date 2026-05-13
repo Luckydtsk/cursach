@@ -1,0 +1,150 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ student.last_name }} {{ student.first_name }} - Система учета{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <h1 class="page-title">{{ student.last_name }} {{ student.first_name }} {{ student.middle_name or '' }}</h1>
+    <div class="btn-group">
+        <a href="{{ url_for('students.edit_student', student_id=student.id) }}" class="btn btn-secondary">Редактировать</a>
+        <form method="POST" action="{{ url_for('students.delete_student', student_id=student.id) }}" style="display: inline;" 
+              onsubmit="return confirm('Удалить студента?')">
+            <button type="submit" class="btn btn-danger">Удалить</button>
+        </form>
+    </div>
+</div>
+
+
+<div class="card">
+    <div class="detail-grid">
+        <div>
+            <div class="detail-item">
+                <div class="detail-label">Группа</div>
+                <div class="detail-value">{{ student.group_name or 'Не указана' }}</div>
+            </div>
+            
+            <div class="detail-item">
+                <div class="detail-label">Курс</div>
+                <div class="detail-value">{{ student.course or '-' }}</div>
+            </div>
+            
+            <div class="detail-item">
+                <div class="detail-label">Кафедра</div>
+                <div class="detail-value">{{ student.department_name or 'Не указана' }}</div>
+            </div>
+        </div>
+        
+        <div>
+            <div class="detail-item">
+                <div class="detail-label">Email</div>
+                <div class="detail-value">{{ student.email }}</div>
+            </div>
+            
+            <div class="detail-item">
+                <div class="detail-label">Телефон</div>
+                <div class="detail-value">{{ student.phone or 'Не указан' }}</div>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+<div class="section">
+    <div class="card">
+        <div class="card-header">
+            <h2 class="card-title">Проекты ({{ projects|length }})</h2>
+        </div>
+        
+        {% if projects %}
+        <div class="table-container">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Проект</th>
+                        <th>Роль</th>
+                        <th>Дата вступления</th>
+                        <th>Срок сдачи</th>
+                        <th>Статус</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for project in projects %}
+                    <tr>
+                        <td>
+                            <a href="{{ url_for('projects.view_project', project_id=project.id) }}" class="link">
+                                {{ project.title }}
+                            </a>
+                        </td>
+                        <td>{{ project.role }}</td>
+                        <td>{{ project.joined_at.strftime('%d.%m.%Y') if project.joined_at else '-' }}</td>
+                        <td>{{ project.end_date.strftime('%d.%m.%Y') if project.end_date else '-' }}</td>
+                        <td>
+                            <span class="badge badge-status" style="background-color: {{ project.status_color or '#6B7280' }}">
+                                {{ project.status or 'Не указан' }}
+                            </span>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% else %}
+        <p style="color: var(--text-secondary);">Студент не участвует в проектах</p>
+        {% endif %}
+    </div>
+</div>
+
+
+<div class="section">
+    <div class="card">
+        <div class="card-header">
+            <h2 class="card-title">Задачи ({{ tasks|length }})</h2>
+        </div>
+        
+        {% if tasks %}
+        <div class="table-container">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Задача</th>
+                        <th>Проект</th>
+                        <th>Приоритет</th>
+                        <th>Дедлайн</th>
+                        <th>Статус</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for task in tasks %}
+                    <tr>
+                        <td>
+                            <a href="{{ url_for('tasks.view_task', task_id=task.id) }}" class="link">
+                                {{ task.title }}
+                            </a>
+                        </td>
+                        <td>{{ task.project_title }}</td>
+                        <td>
+                            <div class="priority">
+                                {% for i in range(5) %}
+                                <span class="priority-dot {% if i < task.priority %}filled{% endif %}"></span>
+                                {% endfor %}
+                            </div>
+                        </td>
+                        <td>{{ task.deadline.strftime('%d.%m.%Y') if task.deadline else '-' }}</td>
+                        <td>
+                            <span class="badge badge-status" style="background-color: {{ task.status_color or '#6B7280' }}">
+                                {{ task.status or 'Не указан' }}
+                            </span>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% else %}
+        <p style="color: var(--text-secondary);">Нет назначенных задач</p>
+        {% endif %}
+    </div>
+</div>
+
+<a href="{{ url_for('students.list_students') }}" class="btn btn-secondary">Назад к списку</a>
+{% endblock %}

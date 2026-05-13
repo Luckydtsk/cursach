@@ -1,0 +1,59 @@
+{% extends 'base.html' %}
+
+{% block title %}Редактирование задачи - Система учета{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <h1 class="page-title">Редактирование задачи</h1>
+    <a href="{{ url_for('tasks.view_task', task_id=task.id) }}" class="btn btn-secondary">Назад</a>
+</div>
+
+<div class="card">
+    <form method="POST" action="{{ url_for('tasks.edit_task', task_id=task.id) }}">
+        <div class="form-group">
+            <label class="form-label">Название задачи *</label>
+            <input type="text" name="title" class="form-control" required value="{{ task.title }}">
+        </div>
+        
+        <div class="form-group">
+            <label class="form-label">Описание</label>
+            <textarea name="description" class="form-control">{{ task.description or '' }}</textarea>
+        </div>
+        
+        <div class="form-row">
+            <div class="form-group">
+                <label class="form-label">Статус</label>
+                <select name="status_id" class="form-control">
+                    {% for status in statuses %}
+                    <option value="{{ status.id }}" {% if task.status_id == status.id %}selected{% endif %}>
+                        {{ status.name }}
+                    </option>
+                    {% endfor %}
+                </select>
+            </div>
+            
+            <div class="form-group">
+                <label class="form-label">Приоритет (1-5)</label>
+                <select name="priority" class="form-control">
+                    {% for i in range(1, 6) %}
+                    <option value="{{ i }}" {% if task.priority == i %}selected{% endif %}>
+                        {{ i }}{% if i == 1 %} - Низкий{% elif i == 3 %} - Средний{% elif i == 5 %} - Высокий{% endif %}
+                    </option>
+                    {% endfor %}
+                </select>
+            </div>
+            
+            <div class="form-group">
+                <label class="form-label">Дедлайн</label>
+                <input type="date" name="deadline" class="form-control" 
+                       value="{{ task.deadline.strftime('%Y-%m-%d') if task.deadline else '' }}">
+            </div>
+        </div>
+        
+        <div class="btn-group">
+            <button type="submit" class="btn btn-primary">Сохранить изменения</button>
+            <a href="{{ url_for('tasks.view_task', task_id=task.id) }}" class="btn btn-secondary">Отмена</a>
+        </div>
+    </form>
+</div>
+{% endblock %}

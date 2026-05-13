@@ -1,0 +1,67 @@
+{% extends 'base.html' %}
+
+{% block title %}Редактирование преподавателя - Система учета{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <h1 class="page-title">Редактирование данных преподавателя</h1>
+    <a href="{{ url_for('teachers.view_teacher', teacher_id=teacher.id) }}" class="btn btn-secondary">Назад</a>
+</div>
+
+<div class="card">
+    <form method="POST" action="{{ url_for('teachers.edit_teacher', teacher_id=teacher.id) }}">
+        <div class="form-row">
+            <div class="form-group">
+                <label class="form-label">Фамилия *</label>
+                <input type="text" name="last_name" class="form-control" required value="{{ teacher.last_name }}">
+            </div>
+            
+            <div class="form-group">
+                <label class="form-label">Имя *</label>
+                <input type="text" name="first_name" class="form-control" required value="{{ teacher.first_name }}">
+            </div>
+            
+            <div class="form-group">
+                <label class="form-label">Отчество</label>
+                <input type="text" name="middle_name" class="form-control" value="{{ teacher.middle_name or '' }}">
+            </div>
+        </div>
+        
+        <div class="form-row">
+            <div class="form-group">
+                <label class="form-label">Email *</label>
+                <input type="email" name="email" class="form-control" required value="{{ teacher.email }}">
+            </div>
+            
+            <div class="form-group">
+                <label class="form-label">Телефон</label>
+                <input type="tel" name="phone" class="form-control" value="{{ teacher.phone or '' }}">
+            </div>
+        </div>
+        
+        <div class="form-row">
+            <div class="form-group">
+                <label class="form-label">Должность</label>
+                <input type="text" name="position" class="form-control" value="{{ teacher.position or '' }}">
+            </div>
+            
+            <div class="form-group">
+                <label class="form-label">Кафедра</label>
+                <select name="department_id" class="form-control">
+                    <option value="">Выберите кафедру</option>
+                    {% for dept in departments %}
+                    <option value="{{ dept.id }}" {% if teacher.department_id == dept.id %}selected{% endif %}>
+                        {{ dept.name }}
+                    </option>
+                    {% endfor %}
+                </select>
+            </div>
+        </div>
+        
+        <div class="btn-group">
+            <button type="submit" class="btn btn-primary">Сохранить изменения</button>
+            <a href="{{ url_for('teachers.view_teacher', teacher_id=teacher.id) }}" class="btn btn-secondary">Отмена</a>
+        </div>
+    </form>
+</div>
+{% endblock %}

@@ -1,0 +1,60 @@
+{% extends 'base.html' %}
+
+{% block title %}Редактирование студента - Система учета{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <h1 class="page-title">Редактирование данных студента</h1>
+    <a href="{{ url_for('students.view_student', student_id=student.id) }}" class="btn btn-secondary">Назад</a>
+</div>
+
+<div class="card">
+    <form method="POST" action="{{ url_for('students.edit_student', student_id=student.id) }}">
+        <div class="form-row">
+            <div class="form-group">
+                <label class="form-label">Фамилия *</label>
+                <input type="text" name="last_name" class="form-control" required value="{{ student.last_name }}">
+            </div>
+            
+            <div class="form-group">
+                <label class="form-label">Имя *</label>
+                <input type="text" name="first_name" class="form-control" required value="{{ student.first_name }}">
+            </div>
+            
+            <div class="form-group">
+                <label class="form-label">Отчество</label>
+                <input type="text" name="middle_name" class="form-control" value="{{ student.middle_name or '' }}">
+            </div>
+        </div>
+        
+        <div class="form-row">
+            <div class="form-group">
+                <label class="form-label">Email *</label>
+                <input type="email" name="email" class="form-control" required value="{{ student.email }}">
+            </div>
+            
+            <div class="form-group">
+                <label class="form-label">Телефон</label>
+                <input type="tel" name="phone" class="form-control" value="{{ student.phone or '' }}">
+            </div>
+        </div>
+        
+        <div class="form-group">
+            <label class="form-label">Группа</label>
+            <select name="student_group_id" class="form-control">
+                <option value="">Выберите группу</option>
+                {% for group in groups %}
+                <option value="{{ group.id }}" {% if student.student_group_id == group.id %}selected{% endif %}>
+                    {{ group.name }} ({{ group.course }} курс)
+                </option>
+                {% endfor %}
+            </select>
+        </div>
+        
+        <div class="btn-group">
+            <button type="submit" class="btn btn-primary">Сохранить изменения</button>
+            <a href="{{ url_for('students.view_student', student_id=student.id) }}" class="btn btn-secondary">Отмена</a>
+        </div>
+    </form>
+</div>
+{% endblock %}

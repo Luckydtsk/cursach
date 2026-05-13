@@ -1,0 +1,56 @@
+{% extends 'base.html' %}
+
+{% block title %}Преподаватели - Система учета{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <h1 class="page-title">Преподаватели</h1>
+    <a href="{{ url_for('teachers.create_teacher') }}" class="btn btn-primary">Добавить преподавателя</a>
+</div>
+
+<div class="card">
+    {% if teachers %}
+    <div class="table-container">
+        <table>
+            <thead>
+                <tr>
+                    <th>ФИО</th>
+                    <th>Должность</th>
+                    <th>Кафедра</th>
+                    <th>Email</th>
+                    <th>Проекты</th>
+                    <th>Действия</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for teacher in teachers %}
+                <tr>
+                    <td>
+                        <a href="{{ url_for('teachers.view_teacher', teacher_id=teacher.id) }}" class="link">
+                            {{ teacher.last_name }} {{ teacher.first_name }} {{ teacher.middle_name or '' }}
+                        </a>
+                    </td>
+                    <td>{{ teacher.position or '-' }}</td>
+                    <td>{{ teacher.department_name or '-' }}</td>
+                    <td>{{ teacher.email }}</td>
+                    <td>{{ teacher.project_count }}</td>
+                    <td>
+                        <div class="btn-group">
+                            <a href="{{ url_for('teachers.view_teacher', teacher_id=teacher.id) }}" class="btn btn-secondary btn-sm">Открыть</a>
+                            <a href="{{ url_for('teachers.edit_teacher', teacher_id=teacher.id) }}" class="btn btn-secondary btn-sm">Изменить</a>
+                        </div>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% else %}
+    <div class="empty-state">
+        <div class="empty-state-icon">&#128102;</div>
+        <p>Преподаватели не найдены</p>
+        <a href="{{ url_for('teachers.create_teacher') }}" class="btn btn-primary" style="margin-top: 1rem;">Добавить преподавателя</a>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

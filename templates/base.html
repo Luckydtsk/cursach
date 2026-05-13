@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Система учета проектных работ{% endblock %}</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+    <nav class="navbar">
+        <div class="nav-container">
+            <a href="{{ url_for('main.index') }}" class="nav-logo">
+                <span class="logo-icon">&#9632;</span>
+                Учет проектов
+            </a>
+            {% if current_user %}
+            <ul class="nav-menu">
+                <li><a href="{{ url_for('main.index') }}" class="nav-link {% if request.endpoint == 'main.index' %}active{% endif %}">Главная</a></li>
+                <li><a href="{{ url_for('projects.list_projects') }}" class="nav-link {% if 'projects' in request.endpoint %}active{% endif %}">Проекты</a></li>
+                <li><a href="{{ url_for('tasks.list_tasks') }}" class="nav-link {% if 'tasks' in request.endpoint %}active{% endif %}">Задачи</a></li>
+                {% if can_manage_users %}
+                <li><a href="{{ url_for('students.list_students') }}" class="nav-link {% if 'students' in request.endpoint %}active{% endif %}">Студенты</a></li>
+                {% endif %}
+                {% if current_user.role in [ROLE_TEACHER, ROLE_ADMIN] %}
+                <li><a href="{{ url_for('teachers.list_teachers') }}" class="nav-link {% if 'teachers' in request.endpoint %}active{% endif %}">Преподаватели</a></li>
+                {% endif %}
+                {% if can_view_reports %}
+                <li><a href="{{ url_for('reports.reports_index') }}" class="nav-link {% if 'reports' in request.endpoint %}active{% endif %}">Отчеты</a></li>
+                {% endif %}
+            </ul>
+            <div class="auth-panel">
+                <div class="auth-user">
+                    <strong>{{ current_user.role_label }}</strong>: {{ current_user.name }}
+                </div>
+                <form method="post" action="{{ url_for('auth.logout') }}">
+                    <button type="submit" class="btn btn-secondary btn-sm">Выйти</button>
+                </form>
+            </div>
+            {% endif %}
+        </div>
+    </nav>
+
+    <main class="main-content">
+        <div class="container">
+            {% with messages = get_flashed_messages(with_categories=true) %}
+                {% if messages %}
+                    {% for category, message in messages %}
+                        <div class="alert alert-{{ category }}">
+                            {{ message }}
+                            <button class="alert-close" onclick="this.parentElement.remove()">&times;</button>
+                        </div>
+                    {% endfor %}
+                {% endif %}
+            {% endwith %}
+            
+            {% block content %}{% endblock %}
+        </div>
+    </main>
+
+    <footer class="footer">
+        <div class="container">
+            <p>Система учета проектных работ студентов &copy; 2024</p>
+        </div>
+    </footer>
+</body>
+</html>

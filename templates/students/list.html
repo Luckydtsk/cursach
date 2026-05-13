@@ -1,0 +1,58 @@
+{% extends 'base.html' %}
+
+{% block title %}Студенты - Система учета{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <h1 class="page-title">Студенты</h1>
+    <a href="{{ url_for('students.create_student') }}" class="btn btn-primary">Добавить студента</a>
+</div>
+
+<div class="card">
+    {% if students %}
+    <div class="table-container">
+        <table>
+            <thead>
+                <tr>
+                    <th>ФИО</th>
+                    <th>Группа</th>
+                    <th>Курс</th>
+                    <th>Email</th>
+                    <th>Проекты</th>
+                    <th>Задачи</th>
+                    <th>Действия</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for student in students %}
+                <tr>
+                    <td>
+                        <a href="{{ url_for('students.view_student', student_id=student.id) }}" class="link">
+                            {{ student.last_name }} {{ student.first_name }} {{ student.middle_name or '' }}
+                        </a>
+                    </td>
+                    <td>{{ student.group_name or '-' }}</td>
+                    <td>{{ student.course or '-' }}</td>
+                    <td>{{ student.email }}</td>
+                    <td>{{ student.project_count }}</td>
+                    <td>{{ student.task_count }}</td>
+                    <td>
+                        <div class="btn-group">
+                            <a href="{{ url_for('students.view_student', student_id=student.id) }}" class="btn btn-secondary btn-sm">Открыть</a>
+                            <a href="{{ url_for('students.edit_student', student_id=student.id) }}" class="btn btn-secondary btn-sm">Изменить</a>
+                        </div>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% else %}
+    <div class="empty-state">
+        <div class="empty-state-icon">&#128100;</div>
+        <p>Студенты не найдены</p>
+        <a href="{{ url_for('students.create_student') }}" class="btn btn-primary" style="margin-top: 1rem;">Добавить первого студента</a>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

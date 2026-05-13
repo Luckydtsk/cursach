@@ -1,0 +1,99 @@
+{% extends 'base.html' %}
+
+{% block title %}Отчет: Хронология событий{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <h1 class="page-title">Хронология событий</h1>
+    <a href="{{ url_for('reports.reports_index') }}" class="btn btn-secondary">Назад к отчетам</a>
+</div>
+
+<div class="card">
+    <p style="color: var(--text-secondary); margin-bottom: 1rem;">
+        История событий по проектам. Можно отфильтровать по конкретному проекту.
+    </p>
+    
+    <form method="GET" action="{{ url_for('reports.activity_timeline') }}" class="inline-form" style="margin-bottom: 1.5rem;">
+        <div class="form-group">
+            <label class="form-label">Фильтр по проекту</label>
+            <select name="project_id" class="form-control">
+                <option value="">Все проекты</option>
+                {% for project in projects %}
+                <option value="{{ project.id }}" {% if project_id == project.id %}selected{% endif %}>
+                    {{ project.title }}
+                </option>
+                {% endfor %}
+            </select>
+        </div>
+        <button type="submit" class="btn btn-primary">Применить</button>
+    </form>
+</div>
+
+<div class="card">
+    {% if activities %}
+    <div class="table-container">
+        <table>
+            <thead>
+                <tr>
+                    <th>Дата и время</th>
+                    <th>Тип события</th>
+                    <th>Описание</th>
+                    <th>Проект</th>
+                    <th>Задача</th>
+                    <th>Автор</th>
+                    <th>Роль</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for activity in activities %}
+                <tr>
+                    <td>{{ activity.created_at.strftime('%d.%m.%Y %H:%M') if activity.created_at else '-' }}</td>
+                    <td>
+                        {% if 'created' in activity.action_type %}
+                        <span class="badge" style="background: #d1fae5; color: #065f46;">Создание</span>
+                        {% elif 'completed' in activity.action_type %}
+                        <span class="badge" style="background: #dbeafe; color: #1e40af;">Выполнено</span>
+                        {% elif 'updated' in activity.action_type %}
+                        <span class="badge" style="background: #fef3c7; color: #92400e;">Изменение</span>
+                        {% else %}
+                        <span class="badge" style="background: #f3f4f6; color: #374151;">{{ activity.action_type }}</span>
+                        {% endif %}
+                    </td>
+                    <td>{{ activity.description }}</td>
+                    <td>
+                        {% if activity.project_id %}
+                        <a href="{{ url_for('projects.view_project', project_id=activity.project_id) }}" class="link">
+                            {{ activity.project_title }}
+                        </a>
+                        {% else %}
+                        -
+                        {% endif %}
+                    </td>
+                    <td>{{ activity.task_title or '-' }}</td>
+                    <td>{{ activity.actor_name or 'Система' }}</td>
+                    <td>
+                        {% if activity.actor_type == 'student' %}
+                        <span style="color: var(--primary);">Студент</span>
+                        {% elif activity.actor_type == 'teacher' %}
+                        <span style="color: var(--success);">Преподаватель</span>
+                        {% else %}
+                        -
+                        {% endif %}
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    
+    <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border);">
+        <strong>Показано событий:</strong> {{ activities|length }}
+        {% if not project_id %}(последние 50){% endif %}
+    </div>
+    {% else %}
+    <div class="empty-state">
+        <p>События не найдены</p>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

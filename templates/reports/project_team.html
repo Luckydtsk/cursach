@@ -1,0 +1,95 @@
+{% extends 'base.html' %}
+
+{% block title %}Отчет: Состав команды проекта{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <h1 class="page-title">Состав команды проекта</h1>
+    <a href="{{ url_for('reports.reports_index') }}" class="btn btn-secondary">Назад к отчетам</a>
+</div>
+
+<div class="card">
+    <p style="color: var(--text-secondary); margin-bottom: 1rem;">
+        Выберите проект для просмотра состава команды с датами вступления участников
+    </p>
+    
+    <form method="GET" action="{{ url_for('reports.project_team') }}" class="inline-form" style="margin-bottom: 1.5rem;">
+        <div class="form-group">
+            <label class="form-label">Проект</label>
+            <select name="project_id" class="form-control" required>
+                <option value="">Выберите проект</option>
+                {% for project in projects %}
+                <option value="{{ project.id }}" {% if project_id == project.id %}selected{% endif %}>
+                    {{ project.title }}
+                </option>
+                {% endfor %}
+            </select>
+        </div>
+        <button type="submit" class="btn btn-primary">Показать команду</button>
+    </form>
+</div>
+
+{% if selected_project %}
+<div class="card">
+    <div class="card-header">
+        <h2 class="card-title">{{ selected_project.title }}</h2>
+        <span class="badge badge-status" style="background-color: #6B7280">
+            {{ selected_project.status or 'Не указан' }}
+        </span>
+    </div>
+    
+    <div class="detail-grid" style="margin-bottom: 1.5rem;">
+        <div class="detail-item">
+            <div class="detail-label">Руководитель</div>
+            <div class="detail-value">{{ selected_project.supervisor_name or 'Не назначен' }}</div>
+        </div>
+    </div>
+    
+    {% if team %}
+    <h3 class="section-title">Участники команды ({{ team|length }})</h3>
+    <div class="table-container">
+        <table>
+            <thead>
+                <tr>
+                    <th>#</th>
+                    <th>ФИО</th>
+                    <th>Группа</th>
+                    <th>Курс</th>
+                    <th>Кафедра</th>
+                    <th>Роль в проекте</th>
+                    <th>Дата вступления</th>
+                    <th>Задач в проекте</th>
+                    <th>Email</th>
+                    <th>Телефон</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for member in team %}
+                <tr>
+                    <td>{{ loop.index }}</td>
+                    <td>
+                        <a href="{{ url_for('students.view_student', student_id=member.id) }}" class="link">
+                            {{ member.last_name }} {{ member.first_name }} {{ member.middle_name or '' }}
+                        </a>
+                    </td>
+                    <td>{{ member.group_name or '-' }}</td>
+                    <td>{{ member.course or '-' }}</td>
+                    <td>{{ member.department_name or '-' }}</td>
+                    <td>{{ member.role }}</td>
+                    <td>{{ member.joined_at.strftime('%d.%m.%Y') if member.joined_at else '-' }}</td>
+                    <td>{{ member.tasks_in_project }}</td>
+                    <td>{{ member.email }}</td>
+                    <td>{{ member.phone or '-' }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% else %}
+    <div class="empty-state">
+        <p>Команда проекта не сформирована</p>
+    </div>
+    {% endif %}
+</div>
+{% endif %}
+{% endblock %}
