@@ -1,0 +1,51 @@
+{% extends 'base.html' %}
+
+{% block title %}Мои студенты - Система учета{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <h1 class="page-title">Мои студенты</h1>
+    <p style="color: var(--text-secondary); margin: 0;">
+        Студенты из команд проектов, где вы указаны как руководитель. Откройте карточку, чтобы отметить консультацию.
+    </p>
+</div>
+
+<div class="card">
+    {% if students %}
+    <div class="table-container">
+        <table>
+            <thead>
+                <tr>
+                    <th>ФИО</th>
+                    <th>Группа</th>
+                    <th>Курс</th>
+                    <th>Email</th>
+                    <th>Ваших проектов</th>
+                    <th></th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for s in students %}
+                <tr>
+                    <td>
+                        <a href="{{ url_for('students.view_student', student_id=s.id) }}" class="link">
+                            {{ s.last_name }} {{ s.first_name }} {{ s.middle_name or '' }}
+                        </a>
+                    </td>
+                    <td>{{ s.group_name or '—' }}</td>
+                    <td>{{ s.course or '—' }}</td>
+                    <td>{{ s.email }}</td>
+                    <td>{{ s.projects_with_me or 0 }}</td>
+                    <td>
+                        <a href="{{ url_for('students.view_student', student_id=s.id) }}" class="btn btn-primary btn-sm">Карточка и консультации</a>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% else %}
+    <p style="color: var(--text-secondary);">Пока нет студентов в ваших проектах как в командах.</p>
+    {% endif %}
+</div>
+{% endblock %}

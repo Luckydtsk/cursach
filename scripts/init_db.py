@@ -17,6 +17,7 @@ def run_script(cursor: sqlite3.Cursor, script_path: Path) -> None:
 def init_database() -> None:
     create_sql = PROJECT_ROOT / "scripts" / "001_create_tables.sql"
     seed_sql = PROJECT_ROOT / "scripts" / "002_seed_data.sql"
+    consultations_sql = PROJECT_ROOT / "scripts" / "003_consultations.sql"
 
     conn = sqlite3.connect(Config.SQLITE_PATH)
     try:
@@ -24,6 +25,8 @@ def init_database() -> None:
         cursor = conn.cursor()
         run_script(cursor, create_sql)
         run_script(cursor, seed_sql)
+        if consultations_sql.exists():
+            run_script(cursor, consultations_sql)
         conn.commit()
     finally:
         conn.close()

@@ -5,13 +5,15 @@
 {% block content %}
 <div class="page-header">
     <h1 class="page-title">{{ teacher.last_name }} {{ teacher.first_name }} {{ teacher.middle_name or '' }}</h1>
+    {% if can_manage_users %}
     <div class="btn-group">
         <a href="{{ url_for('teachers.edit_teacher', teacher_id=teacher.id) }}" class="btn btn-secondary">Редактировать</a>
-        <form method="POST" action="{{ url_for('teachers.delete_teacher', teacher_id=teacher.id) }}" style="display: inline;" 
+        <form method="POST" action="{{ url_for('teachers.delete_teacher', teacher_id=teacher.id) }}" style="display: inline;"
               onsubmit="return confirm('Удалить преподавателя?')">
             <button type="submit" class="btn btn-danger">Удалить</button>
         </form>
     </div>
+    {% endif %}
 </div>
 
 

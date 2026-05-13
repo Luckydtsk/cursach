@@ -1,0 +1,366 @@
+{
+  "nbformat": 4,
+  "nbformat_minor": 0,
+  "metadata": {
+    "colab": {
+      "provenance": []
+    },
+    "kernelspec": {
+      "name": "python3",
+      "display_name": "Python 3"
+    },
+    "language_info": {
+      "name": "python"
+    }
+  },
+  "cells": [
+    {
+      "cell_type": "markdown",
+      "metadata": {
+        "id": "hrm-2bGQYHIF"
+      },
+      "source": [
+        "# Практическое задание\n",
+        "\n",
+        "**Ваша задача:** обучить RNN предсказывать следующий символ в небольшом тексте.\n",
+        "\n",
+        "Модель должна работать на уровне символов: получает текущий символ → предсказывает следующий.\n",
+        "\n",
+        "---\n",
+        "\n",
+        "В большинстве ячеек ничего менять не надо. **Читайте комментарии к коду**.\n",
+        "\n",
+        "**Работу надо прикрепить в формате КР_Фамилия_Имя.ipynb**\n",
+        "\n",
+        "---\n",
+        "\n",
+        "Формулы для класса myRNN:\n",
+        "$$h_t = \\tanh(W_{xh} \\cdot x_t + W_{hh} \\cdot h_{t-1} + b_h)$$\n",
+        "$$y_t = W_{hy} \\cdot h_t + b_y$$"
+      ]
+    },
+    {
+      "cell_type": "markdown",
+      "source": [
+        "---\n",
+        "\n",
+        "*Списывание -- карается, комментарии к коду -- приветствуются*"
+      ],
+      "metadata": {
+        "id": "ZHr0J0ahp-5n"
+      }
+    },
+    {
+      "cell_type": "code",
+      "execution_count": null,
+      "metadata": {
+        "id": "53jqkcCOYHIH"
+      },
+      "outputs": [],
+      "source": [
+        "# нужные import-ы, больше ничего не понадобится\n",
+        "import numpy as np\n",
+        "import matplotlib.pyplot as plt\n",
+        "from numpy.random import randn"
+      ]
+    },
+    {
+      "cell_type": "markdown",
+      "metadata": {
+        "id": "f9gEloeEYHII"
+      },
+      "source": [
+        "## 1. Подготовка данных\n",
+        "\n",
+        "Цель: каждый символ кодируется как **one-hot вектор**."
+      ]
+    },
+    {
+      "cell_type": "code",
+      "source": [
+        "text = \"the quick brown fox jumps over the lazy dog\"\n",
+        "\n",
+        "# (\"The quick brown fox jumps over the lazy dog\" is an English-language pangram – a sentence that contains all 26 letters of the English alphabet)"
+      ],
+      "metadata": {
+        "id": "3_NxuVvejeUo"
+      },
+      "execution_count": null,
+      "outputs": []
+    },
+    {
+      "cell_type": "code",
+      "execution_count": null,
+      "metadata": {
+        "id": "aWymu8foYHIJ"
+      },
+      "outputs": [],
+      "source": [
+        "# составляем список уникальных символов и словарь для кодирование\n",
+        "# в данной ячейке ничего трогать не надо :)\n",
+        "\n",
+        "\n",
+        "chars = sorted(set(text))\n",
+        "vocab_size = len(chars)\n",
+        "\n",
+        "char_to_idx = {ch: i for i, ch in enumerate(chars)}\n",
+        "idx_to_char = {i: ch for i, ch in enumerate(chars)}\n",
+        "\n",
+        "print(f\"Размер словаря: {vocab_size}\")\n",
+        "print(f\"Символы: {chars}\")\n",
+        "print(f\"Cловарь кодирования букв: {char_to_idx}\")"
+      ]
+    },
+    {
+      "cell_type": "code",
+      "execution_count": null,
+      "metadata": {
+        "id": "u3JlBY1_YHIJ"
+      },
+      "outputs": [],
+      "source": [
+        "def one_hot(idx, size):\n",
+        "    # функция для ohe-hot кодиравания, ничего трогать не надо :)\n",
+        "    vec = np.zeros((size, 1))\n",
+        "    vec[idx] = 1\n",
+        "    return vec\n",
+        "\n",
+        "# Проверка: должен напечатать вектор с 1 на нулевой позиции\n",
+        "print(one_hot(0, vocab_size).T)"
+      ]
+    },
+    {
+      "cell_type": "code",
+      "execution_count": null,
+      "metadata": {
+        "id": "mTnX7v-HYHIJ"
+      },
+      "outputs": [],
+      "source": [
+        "# сформируйте пары (входной вектор, индекс следующего символа)\n",
+        "X = []  # список one-hot векторов\n",
+        "Y = []  # список индексов следующих символов\n",
+        "\n",
+        "for i in range(len(text) - 1):\n",
+        "    # ваш код\n",
+        "    pass\n",
+        "\n",
+        "\n",
+        "print(f\"Количество пар символов: {len(X)}\")\n",
+        "print(f\"Пример: первый символ '{text[0]}' -> следующий символ '{text[1]}'\")"
+      ]
+    },
+    {
+      "cell_type": "markdown",
+      "metadata": {
+        "id": "geENAxyFYHIK"
+      },
+      "source": [
+        "## 2. Класс myRNN"
+      ]
+    },
+    {
+      "cell_type": "code",
+      "source": [
+        "class myRNN:\n",
+        "\n",
+        "    def __init__(self, input_size, hidden_size, output_size):\n",
+        "        # Инициализируйте веса. Помните, что между весами должно происходить умножение.\n",
+        "        # Вспомните, какие условия накладываются на матрицы, которые умножаются между собой.\n",
+        "\n",
+        "        self.Wxh =   # вход    -> скрытый\n",
+        "        self.Whh =   # скрытый -> скрытый\n",
+        "        self.Why =   # скрытый -> выход\n",
+        "\n",
+        "        # Это векторы смещения\n",
+        "        self.bh =\n",
+        "        self.by =\n",
+        "\n",
+        "\n",
+        "\n",
+        "    def forward(self, x, h_prev):\n",
+        "        h =  # реализуйте формулы из начала тетрадки\n",
+        "        y =  # реализуйте формулы из начала тетрадки\n",
+        "        return h, y\n",
+        "\n",
+        "\n",
+        "    def backprop(self, x, h_prev, h, d_y, learn_rate):\n",
+        "\n",
+        "        # Градиенты выходного слоя\n",
+        "        d_Why = d_y @ h.T\n",
+        "        d_by  = d_y\n",
+        "\n",
+        "        # реализуйте градиент по h через производную tanh\n",
+        "        d_h   =\n",
+        "\n",
+        "        d_Wxh = d_h @ x.T\n",
+        "        d_Whh = d_h @ h_prev.T\n",
+        "        d_bh  = d_h\n",
+        "\n",
+        "        # обновите оставшиеся веса по аналогии\n",
+        "        self.Why -= learn_rate * d_Why\n",
+        "        self.by  -= learn_rate * d_by\n",
+        "        self.Wxh -= # ваш код\n",
+        "        self.Whh -= # ваш код\n",
+        "        self.bh  -= # ваш код"
+      ],
+      "metadata": {
+        "id": "hzOGPWeXflZ4"
+      },
+      "execution_count": null,
+      "outputs": []
+    },
+    {
+      "cell_type": "markdown",
+      "metadata": {
+        "id": "8BHfOIPuYHIK"
+      },
+      "source": [
+        "## 3. Вспомогательные функции"
+      ]
+    },
+    {
+      "cell_type": "code",
+      "execution_count": null,
+      "metadata": {
+        "id": "-l4fNe07YHIL"
+      },
+      "outputs": [],
+      "source": [
+        "# данную функцию трогать не надо\n",
+        "def softmax(x):\n",
+        "    e = np.exp(x - np.max(x))\n",
+        "    return e / e.sum()\n"
+      ]
+    },
+    {
+      "cell_type": "markdown",
+      "metadata": {
+        "id": "t13fO-b5YHIL"
+      },
+      "source": [
+        "## 4. Обучение"
+      ]
+    },
+    {
+      "cell_type": "code",
+      "execution_count": null,
+      "metadata": {
+        "id": "FOV88G-YYHIL"
+      },
+      "outputs": [],
+      "source": [
+        "hidden_size = 32 # ничего трогать не надо :)\n",
+        "learn_rate  = 0.1 # ничего трогать не надо :)\n",
+        "epochs      = 300 # ничего трогать не надо :)\n",
+        "\n",
+        "# создайте модель (заполните многоточие)\n",
+        "model = myRNN(...)\n",
+        "losses = []\n",
+        "\n",
+        "# обучение, ничего трогать не надо :)\n",
+        "for epoch in range(epochs):\n",
+        "    loss = 0\n",
+        "    h    = np.zeros((hidden_size, 1))\n",
+        "\n",
+        "    for x, y_true_idx in zip(X, Y):\n",
+        "        h_prev = h\n",
+        "\n",
+        "        h, y = model.forward(x, h_prev)\n",
+        "\n",
+        "        probs = softmax(y)\n",
+        "        loss += -np.log(probs[y_true_idx][0] + 1e-9)\n",
+        "\n",
+        "        d_y = probs.copy()\n",
+        "        d_y[y_true_idx] -= 1\n",
+        "        model.backprop(x, h_prev, h, d_y, learn_rate)\n",
+        "\n",
+        "    losses.append(loss)\n",
+        "\n",
+        "\n",
+        "    if epoch % 30 == 0:\n",
+        "        print(f\"Эпоха {epoch:3d}    Loss: {loss:.4f}\")"
+      ]
+    },
+    {
+      "cell_type": "markdown",
+      "metadata": {
+        "id": "Z_IECE67YHIL"
+      },
+      "source": [
+        "## 5. Визуализация"
+      ]
+    },
+    {
+      "cell_type": "code",
+      "execution_count": null,
+      "metadata": {
+        "id": "HvQPSNDsYHIM"
+      },
+      "outputs": [],
+      "source": [
+        "#  сделай визуализацию loss-ов в зависимости от эпохи\n"
+      ]
+    },
+    {
+      "cell_type": "markdown",
+      "metadata": {
+        "id": "a4z4AOOQYHIM"
+      },
+      "source": [
+        "## 6. Проверка модели"
+      ]
+    },
+    {
+      "cell_type": "markdown",
+      "source": [
+        "Раздел для вас, чтобы убедиться, что всё ок"
+      ],
+      "metadata": {
+        "id": "jR-vUClPgu2P"
+      }
+    },
+    {
+      "cell_type": "code",
+      "execution_count": null,
+      "metadata": {
+        "id": "jAL59icyYHIM"
+      },
+      "outputs": [],
+      "source": [
+        "def generate(model, start_char, length=20):\n",
+        "    # Генерирует строку заданной длины, начиная с start_char\n",
+        "    # вам тут ничего трогать не надо\n",
+        "    h      = np.zeros((hidden_size, 1))\n",
+        "    char   = start_char\n",
+        "    result = [char]\n",
+        "\n",
+        "    for _ in range(length):\n",
+        "        x = one_hot(char_to_idx[char], vocab_size)\n",
+        "        h, y = model.forward(x, h)\n",
+        "        char = idx_to_char[np.argmax(softmax(y))]\n",
+        "        result.append(char)\n",
+        "\n",
+        "    return \"\".join(result)\n",
+        "\n",
+        "# Генерация текста\n",
+        "print(\"Генерация текста, начиная с разных букв\")\n",
+        "for start in [\"t\", \"q\", \"f\", \"d\"]:\n",
+        "    print(f\"  '{start}' -> {generate(model, start)}\")"
+      ]
+    },
+    {
+      "cell_type": "markdown",
+      "source": [
+        "#7. Выводы\n",
+        "Напишите выводы по проделанной работе:\n",
+        "- Насколько эффективен код и методы\n",
+        "- Чтобы вы предложили улучшить\n",
+        "- Любые другие комментарии по теме"
+      ],
+      "metadata": {
+        "id": "tXMTx__nplLT"
+      }
+    }
+  ]
+}

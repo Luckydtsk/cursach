@@ -203,3 +203,139 @@ def activity_timeline():
                          activities=activities,
                          projects=projects,
                          project_id=project_id)
+
+
+@reports_bp.route('/consultations')
+@roles_required(ROLE_TEACHER, ROLE_ADMIN)
+def consultations_report():
+    role = g.current_user["role"]
+    student_filter = request.args.get('student_id', type=int)
+    teacher_filter = request.args.get('teacher_id', type=int)
+
+    if role == ROLE_TEACHER:
+        teacher_id = g.current_user["id"]
+        students_options = execute_query(
+            """
+            SELECT DISTINCT s.id,
+                   TRIM(s.last_name || ' ' || s.first_name || ' ' || COALESCE(s.middle_name, '')) AS full_name
+            FROM student s
+            JOIN project_team pt ON pt.student_id = s.id
+            JOIN project p ON p.id = pt.project_id AND p.supervisor_id = %s
+            ORDER BY s.last_name, s.first_name
+            """,
+            (teacher_id,),
+            fetch_all=True,
+        )
+        allowed_ids = {s["id"] for s in (students_options or [])}
+        if student_filter and student_filter not in allowed_ids:
+            student_filter = None
+
+        sum_params = [teacher_id]
+        sum_sql = """
+            SELECT COALESCE(SUM(c.duration_minutes), 0) AS total_minutes
+            FROM consultation c
+            WHERE c.teacher_id = %s
+        """
+        if student_filter:
+            sum_sql += " AND c.student_id = %s"
+            sum_params.append(student_filter)
+
+        total_row = execute_query(sum_sql, tuple(sum_params), fetch_one=True)
+
+        list_params = [teacher_id]
+        list_sql = """
+            SELECT
+                c.id,
+                c.consultation_date,
+                c.duration_minutes,
+                c.note,
+                TRIM(s.last_name || ' ' || s.first_name || ' ' || COALESCE(s.middle_name, '')) AS student_name
+            FROM consultation c
+            JOIN student s ON s.id = c.student_id
+            WHERE c.teacher_id = %s
+        """
+        if student_filter:
+            list_sql += " AND c.student_id = %s"
+            list_params.append(student_filter)
+        list_sql += " ORDER BY c.consultation_date DESC, c.id DESC"
+        rows = execute_query(list_sql, tuple(list_params), fetch_all=True)
+
+        return render_template(
+            'reports/consultations.html',
+            role=role,
+            total_minutes=total_row["total_minutes"] if total_row else 0,
+            rows=rows or [],
+            students_options=students_options or [],
+            student_filter=student_filter,
+            teachers_options=None,
+            teacher_filter=None,
+        )
+
+    # Администратор: все преподаватели и студенты, фильтры по желанию
+    teachers_options = execute_query(
+        """
+        SELECT id,
+               TRIM(last_name || ' ' || first_name || ' ' || COALESCE(middle_name, '')) AS full_name
+        FROM teacher
+        ORDER BY last_name, first_name
+        """,
+        fetch_all=True,
+    )
+    students_options = execute_query(
+        """
+        SELECT id,
+               TRIM(last_name || ' ' || first_name || ' ' || COALESCE(middle_name, '')) AS full_name
+        FROM student
+        ORDER BY last_name, first_name
+        """,
+        fetch_all=True,
+    )
+
+    sum_sql = """
+        SELECT COALESCE(SUM(c.duration_minutes), 0) AS total_minutes
+        FROM consultation c
+        WHERE 1=1
+    """
+    sum_params = []
+    if teacher_filter:
+        sum_sql += " AND c.teacher_id = %s"
+        sum_params.append(teacher_filter)
+    if student_filter:
+        sum_sql += " AND c.student_id = %s"
+        sum_params.append(student_filter)
+
+    total_row = execute_query(sum_sql, tuple(sum_params), fetch_one=True)
+
+    list_sql = """
+        SELECT
+            c.id,
+            c.consultation_date,
+            c.duration_minutes,
+            c.note,
+            TRIM(s.last_name || ' ' || s.first_name || ' ' || COALESCE(s.middle_name, '')) AS student_name,
+            TRIM(t.last_name || ' ' || t.first_name || ' ' || COALESCE(t.middle_name, '')) AS teacher_name
+        FROM consultation c
+        JOIN student s ON s.id = c.student_id
+        JOIN teacher t ON t.id = c.teacher_id
+        WHERE 1=1
+    """
+    list_params = []
+    if teacher_filter:
+        list_sql += " AND c.teacher_id = %s"
+        list_params.append(teacher_filter)
+    if student_filter:
+        list_sql += " AND c.student_id = %s"
+        list_params.append(student_filter)
+    list_sql += " ORDER BY c.consultation_date DESC, c.id DESC"
+    rows = execute_query(list_sql, tuple(list_params), fetch_all=True)
+
+    return render_template(
+        'reports/consultations.html',
+        role=role,
+        total_minutes=total_row["total_minutes"] if total_row else 0,
+        rows=rows or [],
+        students_options=students_options or [],
+        student_filter=student_filter,
+        teachers_options=teachers_options or [],
+        teacher_filter=teacher_filter,
+    )

@@ -128,7 +128,7 @@ def create_project():
                 'projects/create.html',
                 statuses=statuses,
                 teachers=teachers,
-                form_data=form_data
+                form_data=form_data,
             )
 
         try:
@@ -141,7 +141,7 @@ def create_project():
                 'projects/create.html',
                 statuses=statuses,
                 teachers=teachers,
-                form_data=form_data
+                form_data=form_data,
             )
 
         if start_date_obj > end_date_obj:
@@ -151,7 +151,7 @@ def create_project():
                 'projects/create.html',
                 statuses=statuses,
                 teachers=teachers,
-                form_data=form_data
+                form_data=form_data,
             )
         
         if g.current_user["role"] == ROLE_TEACHER:

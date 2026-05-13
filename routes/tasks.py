@@ -19,16 +19,23 @@ tasks_bp = Blueprint('tasks', __name__, url_prefix='/tasks')
 
 
 def _can_submit_to_task(task_id, student_id):
-    assignment = execute_query(
-        """
-        SELECT id
-        FROM task_student
-        WHERE task_id = %s AND student_id = %s
-        """,
-        (task_id, student_id),
+    """Участник команды проекта может сдавать файлы по любой задаче этого проекта (как по самому проекту)."""
+    task = execute_query(
+        "SELECT project_id FROM task WHERE id = %s",
+        (task_id,),
         fetch_one=True,
     )
-    return bool(assignment)
+    if not task:
+        return False
+    membership = execute_query(
+        """
+        SELECT id FROM project_team
+        WHERE project_id = %s AND student_id = %s
+        """,
+        (task["project_id"], student_id),
+        fetch_one=True,
+    )
+    return bool(membership)
 
 
 @tasks_bp.route('/')
@@ -438,7 +445,7 @@ def update_status(task_id):
 @roles_required(ROLE_STUDENT)
 def submit_task_work(task_id):
     if not _can_submit_to_task(task_id, g.current_user["id"]):
-        flash('Вы можете сдавать работы только по назначенным задачам', 'error')
+        flash('Вы можете сдавать работы только по задачам проектов, в которых вы состоите в команде', 'error')
         return redirect(url_for('tasks.view_task', task_id=task_id))
 
     uploaded = request.files.get('work_file')

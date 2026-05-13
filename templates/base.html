@@ -18,8 +18,11 @@
                 <li><a href="{{ url_for('main.index') }}" class="nav-link {% if request.endpoint == 'main.index' %}active{% endif %}">Главная</a></li>
                 <li><a href="{{ url_for('projects.list_projects') }}" class="nav-link {% if 'projects' in request.endpoint %}active{% endif %}">Проекты</a></li>
                 <li><a href="{{ url_for('tasks.list_tasks') }}" class="nav-link {% if 'tasks' in request.endpoint %}active{% endif %}">Задачи</a></li>
+                {% if current_user.role == ROLE_TEACHER %}
+                <li><a href="{{ url_for('students.supervised_students_list') }}" class="nav-link {% if request.endpoint == 'students.supervised_students_list' %}active{% endif %}">Мои студенты</a></li>
+                {% endif %}
                 {% if can_manage_users %}
-                <li><a href="{{ url_for('students.list_students') }}" class="nav-link {% if 'students' in request.endpoint %}active{% endif %}">Студенты</a></li>
+                <li><a href="{{ url_for('students.list_students') }}" class="nav-link {% if 'students' in request.endpoint and request.endpoint != 'students.supervised_students_list' %}active{% endif %}">Студенты</a></li>
                 {% endif %}
                 {% if current_user.role in [ROLE_TEACHER, ROLE_ADMIN] %}
                 <li><a href="{{ url_for('teachers.list_teachers') }}" class="nav-link {% if 'teachers' in request.endpoint %}active{% endif %}">Преподаватели</a></li>
@@ -59,7 +62,7 @@
 
     <footer class="footer">
         <div class="container">
-            <p>Система учета проектных работ студентов &copy; 2024</p>
+            <p>Система учета проектных работ студентов &copy; 2026</p>
         </div>
     </footer>
 </body>

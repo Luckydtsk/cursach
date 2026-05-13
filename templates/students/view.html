@@ -5,13 +5,15 @@
 {% block content %}
 <div class="page-header">
     <h1 class="page-title">{{ student.last_name }} {{ student.first_name }} {{ student.middle_name or '' }}</h1>
+    {% if can_manage_users %}
     <div class="btn-group">
         <a href="{{ url_for('students.edit_student', student_id=student.id) }}" class="btn btn-secondary">Редактировать</a>
-        <form method="POST" action="{{ url_for('students.delete_student', student_id=student.id) }}" style="display: inline;" 
+        <form method="POST" action="{{ url_for('students.delete_student', student_id=student.id) }}" style="display: inline;"
               onsubmit="return confirm('Удалить студента?')">
             <button type="submit" class="btn btn-danger">Удалить</button>
         </form>
     </div>
+    {% endif %}
 </div>
 
 
@@ -47,6 +49,94 @@
         </div>
     </div>
 </div>
+
+
+{% if teacher_can_consult %}
+<div class="section">
+    <div class="card">
+        <div class="card-header">
+            <h2 class="card-title">Консультации</h2>
+        </div>
+        <p style="color: var(--text-secondary); margin-bottom: 1rem;">
+            Учитываются только ваши записи. Доступно для студентов из проектов, где вы руководитель.
+        </p>
+        <form method="POST" action="{{ url_for('students.add_consultation', student_id=student.id) }}" style="margin-bottom: 1.5rem; padding: 1rem; border: 1px solid var(--border-color); border-radius: 8px;">
+            <div class="form-row">
+                <div class="form-group">
+                    <label class="form-label">Дата консультации *</label>
+                    <input type="date" name="consultation_date" class="form-control" required>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Длительность (часы) *</label>
+                    <input type="number" name="duration_hours" class="form-control" min="0.25" max="24" step="0.25" value="1" required>
+                </div>
+            </div>
+            <div class="form-group">
+                <label class="form-label">Комментарий (необязательно)</label>
+                <input type="text" name="note" class="form-control" maxlength="500" placeholder="Тема, формат встречи…">
+            </div>
+            <button type="submit" class="btn btn-primary">Отметить консультацию</button>
+        </form>
+
+        {% if consultations_teacher %}
+        <div class="table-container">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Дата</th>
+                        <th>Длительность</th>
+                        <th>Комментарий</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for c in consultations_teacher %}
+                    <tr>
+                        <td>{{ c.consultation_date.strftime('%d.%m.%Y') if c.consultation_date else '-' }}</td>
+                        <td>{{ (c.duration_minutes / 60) | round(2) }} ч ({{ c.duration_minutes }} мин)</td>
+                        <td>{{ c.note or '—' }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% else %}
+        <p style="color: var(--text-secondary);">Записей консультаций с этим студентом пока нет.</p>
+        {% endif %}
+    </div>
+</div>
+{% endif %}
+
+{% if consultations_student_view %}
+<div class="section">
+    <div class="card">
+        <div class="card-header">
+            <h2 class="card-title">Консультации с преподавателями</h2>
+        </div>
+        <div class="table-container">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Дата</th>
+                        <th>Преподаватель</th>
+                        <th>Длительность</th>
+                        <th>Комментарий</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for c in consultations_student_view %}
+                    <tr>
+                        <td>{{ c.consultation_date.strftime('%d.%m.%Y') if c.consultation_date else '-' }}</td>
+                        <td>{{ c.teacher_name }}</td>
+                        <td>{{ (c.duration_minutes / 60) | round(2) }} ч</td>
+                        <td>{{ c.note or '—' }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endif %}
 
 
 <div class="section">
@@ -146,5 +236,9 @@
     </div>
 </div>
 
+{% if can_manage_users %}
 <a href="{{ url_for('students.list_students') }}" class="btn btn-secondary">Назад к списку</a>
+{% else %}
+<a href="{{ url_for('main.index') }}" class="btn btn-secondary">На главную</a>
+{% endif %}
 {% endblock %}

@@ -1,8 +1,41 @@
+from datetime import date
+
 from flask import Blueprint, render_template, request, redirect, url_for, flash, g
-from database import execute_query
+from database import execute_query, log_activity
 from routes.auth import roles_required, is_self_student, ROLE_TEACHER, ROLE_ADMIN
 
 students_bp = Blueprint('students', __name__, url_prefix='/students')
+
+
+def teacher_supervises_student(teacher_id, student_id):
+    row = execute_query(
+        """
+        SELECT 1 AS ok
+        FROM project_team pt
+        JOIN project p ON p.id = pt.project_id
+        WHERE pt.student_id = %s AND p.supervisor_id = %s
+        LIMIT 1
+        """,
+        (student_id, teacher_id),
+        fetch_one=True,
+    )
+    return bool(row)
+
+
+def _first_supervised_project_id(teacher_id, student_id):
+    row = execute_query(
+        """
+        SELECT p.id
+        FROM project_team pt
+        JOIN project p ON p.id = pt.project_id
+        WHERE pt.student_id = %s AND p.supervisor_id = %s
+        ORDER BY p.id
+        LIMIT 1
+        """,
+        (student_id, teacher_id),
+        fetch_one=True,
+    )
+    return row["id"] if row else None
 
 
 @students_bp.route('/')
@@ -65,6 +98,38 @@ def create_student():
     return render_template('students/create.html', groups=groups)
 
 
+@students_bp.route('/supervised')
+@roles_required(ROLE_TEACHER)
+def supervised_students_list():
+    tid = g.current_user["id"]
+    students = execute_query(
+        """
+        SELECT DISTINCT
+            s.id,
+            s.last_name,
+            s.first_name,
+            s.middle_name,
+            s.email,
+            sg.name AS group_name,
+            sg.course,
+            (
+                SELECT COUNT(DISTINCT p2.id)
+                FROM project_team pt2
+                JOIN project p2 ON p2.id = pt2.project_id
+                WHERE pt2.student_id = s.id AND p2.supervisor_id = %s
+            ) AS projects_with_me
+        FROM student s
+        JOIN project_team pt ON pt.student_id = s.id
+        JOIN project p ON p.id = pt.project_id AND p.supervisor_id = %s
+        LEFT JOIN student_group sg ON s.student_group_id = sg.id
+        ORDER BY s.last_name, s.first_name
+        """,
+        (tid, tid),
+        fetch_all=True,
+    )
+    return render_template('students/supervised_list.html', students=students or [])
+
+
 @students_bp.route('/<int:student_id>')
 def view_student(student_id):
     if not is_self_student(student_id):
@@ -87,7 +152,9 @@ def view_student(student_id):
     
     if not student:
         flash('Студент не найден', 'error')
-        return redirect(url_for('students.list_students'))
+        if g.current_user and g.current_user.get('role') == ROLE_ADMIN:
+            return redirect(url_for('students.list_students'))
+        return redirect(url_for('main.index'))
     
     projects = execute_query("""
         SELECT 
@@ -121,8 +188,115 @@ def view_student(student_id):
         WHERE tst.student_id = %s
         ORDER BY t.deadline
     """, (student_id,), fetch_all=True)
-    
-    return render_template('students/view.html', student=student, projects=projects, tasks=tasks)
+
+    current = g.current_user
+    role = current.get("role") if current else None
+    teacher_can_consult = (
+        role == ROLE_TEACHER
+        and current.get("id")
+        and teacher_supervises_student(current["id"], student_id)
+    )
+    consultations_teacher = []
+    consultations_student_view = []
+    if teacher_can_consult:
+        consultations_teacher = execute_query(
+            """
+            SELECT c.id, c.consultation_date, c.duration_minutes, c.note, c.created_at
+            FROM consultation c
+            WHERE c.teacher_id = %s AND c.student_id = %s
+            ORDER BY c.consultation_date DESC, c.id DESC
+            """,
+            (current["id"], student_id),
+            fetch_all=True,
+        )
+    elif is_self_student(student_id):
+        consultations_student_view = execute_query(
+            """
+            SELECT c.consultation_date, c.duration_minutes, c.note,
+                   t.last_name || ' ' || t.first_name || ' ' || COALESCE(t.middle_name, '') AS teacher_name
+            FROM consultation c
+            JOIN teacher t ON t.id = c.teacher_id
+            WHERE c.student_id = %s
+            ORDER BY c.consultation_date DESC, c.id DESC
+            """,
+            (student_id,),
+            fetch_all=True,
+        )
+
+    return render_template(
+        'students/view.html',
+        student=student,
+        projects=projects,
+        tasks=tasks,
+        teacher_can_consult=teacher_can_consult,
+        consultations_teacher=consultations_teacher,
+        consultations_student_view=consultations_student_view,
+    )
+
+
+@students_bp.route('/<int:student_id>/consultations', methods=['POST'])
+@roles_required(ROLE_TEACHER)
+def add_consultation(student_id):
+    teacher_id = g.current_user.get('id')
+    if not teacher_id or not teacher_supervises_student(teacher_id, student_id):
+        flash('Можно отмечать консультации только со студентами из ваших проектов', 'error')
+        return redirect(url_for('main.index'))
+
+    student = execute_query(
+        "SELECT id, last_name, first_name FROM student WHERE id = %s",
+        (student_id,),
+        fetch_one=True,
+    )
+    if not student:
+        flash('Студент не найден', 'error')
+        return redirect(url_for('main.index'))
+
+    raw_date = (request.form.get('consultation_date') or '').strip()
+    duration_hours_raw = (request.form.get('duration_hours') or '').strip().replace(',', '.')
+    note = (request.form.get('note') or '').strip() or None
+
+    if not raw_date or not duration_hours_raw:
+        flash('Укажите дату и длительность консультации', 'error')
+        return redirect(url_for('students.view_student', student_id=student_id))
+
+    try:
+        date.fromisoformat(raw_date)
+    except ValueError:
+        flash('Некорректная дата', 'error')
+        return redirect(url_for('students.view_student', student_id=student_id))
+
+    try:
+        duration_hours = float(duration_hours_raw)
+    except ValueError:
+        flash('Некорректная длительность (часы)', 'error')
+        return redirect(url_for('students.view_student', student_id=student_id))
+
+    if duration_hours <= 0:
+        flash('Длительность должна быть больше нуля', 'error')
+        return redirect(url_for('students.view_student', student_id=student_id))
+
+    duration_minutes = max(1, int(round(duration_hours * 60)))
+
+    execute_query(
+        """
+        INSERT INTO consultation (teacher_id, student_id, consultation_date, duration_minutes, note)
+        VALUES (%s, %s, %s, %s, %s)
+        """,
+        (teacher_id, student_id, raw_date, duration_minutes, note),
+        commit=True,
+    )
+
+    project_id = _first_supervised_project_id(teacher_id, student_id)
+    student_label = f"{student['last_name']} {student['first_name']}".strip()
+    log_activity(
+        'consultation_logged',
+        f'Консультация со студентом {student_label}, {duration_hours_raw} ч.',
+        current_user=g.current_user,
+        project_id=project_id,
+        task_id=None,
+    )
+    flash('Консультация сохранена', 'success')
+    return redirect(url_for('students.view_student', student_id=student_id))
 
 
 @students_bp.route('/<int:student_id>/edit', methods=['GET', 'POST'])

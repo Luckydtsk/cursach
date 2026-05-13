@@ -1,0 +1,94 @@
+{% extends 'base.html' %}
+
+{% block title %}Отчет: консультации - Система учета{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <h1 class="page-title">Консультации с студентами</h1>
+    <div class="btn-group">
+        {% if role == 'teacher' %}
+        <a href="{{ url_for('students.supervised_students_list') }}" class="btn btn-primary">Список моих студентов</a>
+        {% endif %}
+        <a href="{{ url_for('reports.reports_index') }}" class="btn btn-secondary">Назад к отчетам</a>
+    </div>
+</div>
+
+<div class="card" style="margin-bottom: 1.5rem;">
+    <p style="font-size: 1.25rem; margin: 0;">
+        <strong>Всего по выборке:</strong>
+        {{ (total_minutes / 60) | round(2) }} ч
+        <span style="color: var(--text-secondary); font-size: 0.95rem;">({{ total_minutes }} мин)</span>
+    </p>
+</div>
+
+<div class="card" style="margin-bottom: 1.5rem;">
+    <form method="GET" action="{{ url_for('reports.consultations_report') }}" class="inline-form">
+        {% if role == 'admin' and teachers_options %}
+        <div class="form-group">
+            <label class="form-label">Преподаватель</label>
+            <select name="teacher_id" class="form-control" onchange="this.form.submit()">
+                <option value="">Все</option>
+                {% for t in teachers_options %}
+                <option value="{{ t.id }}" {% if teacher_filter == t.id %}selected{% endif %}>{{ t.full_name }}</option>
+                {% endfor %}
+            </select>
+        </div>
+        {% endif %}
+
+        <div class="form-group">
+            <label class="form-label">Студент</label>
+            <select name="student_id" class="form-control" onchange="this.form.submit()">
+                <option value="">Все студенты</option>
+                {% for s in students_options %}
+                <option value="{{ s.id }}" {% if student_filter == s.id %}selected{% endif %}>{{ s.full_name }}</option>
+                {% endfor %}
+            </select>
+        </div>
+
+        {% if role == 'admin' and teachers_options %}
+        <button type="submit" class="btn btn-secondary">Применить</button>
+        {% endif %}
+    </form>
+    {% if role == 'teacher' %}
+    <p style="color: var(--text-secondary); margin-top: 0.75rem; font-size: 0.9rem;">
+        В списке только студенты из ваших проектов (где вы руководитель).
+    </p>
+    {% endif %}
+</div>
+
+<div class="card">
+    <h3 class="card-title">Записи</h3>
+    {% if rows %}
+    <div class="table-container">
+        <table>
+            <thead>
+                <tr>
+                    <th>Дата</th>
+                    {% if role == 'admin' %}
+                    <th>Преподаватель</th>
+                    {% endif %}
+                    <th>Студент</th>
+                    <th>Длительность</th>
+                    <th>Комментарий</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for r in rows %}
+                <tr>
+                    <td>{{ r.consultation_date.strftime('%d.%m.%Y') if r.consultation_date else '-' }}</td>
+                    {% if role == 'admin' %}
+                    <td>{{ r.teacher_name }}</td>
+                    {% endif %}
+                    <td>{{ r.student_name }}</td>
+                    <td>{{ (r.duration_minutes / 60) | round(2) }} ч</td>
+                    <td>{{ r.note or '—' }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% else %}
+    <p style="color: var(--text-secondary);">Нет записей по выбранным условиям.</p>
+    {% endif %}
+</div>
+{% endblock %}

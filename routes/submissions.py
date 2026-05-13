@@ -33,12 +33,18 @@ def _can_access_file(file_record):
             return bool(membership)
 
         if file_record["task_id"]:
-            assignment = execute_query(
-                "SELECT id FROM task_student WHERE task_id = %s AND student_id = %s",
-                (file_record["task_id"], student_id),
+            row = execute_query(
+                """
+                SELECT 1 AS ok
+                FROM task t
+                JOIN project_team pt ON pt.project_id = t.project_id AND pt.student_id = %s
+                WHERE t.id = %s
+                LIMIT 1
+                """,
+                (student_id, file_record["task_id"]),
                 fetch_one=True,
             )
-            return bool(assignment)
+            return bool(row)
 
         return False
 
