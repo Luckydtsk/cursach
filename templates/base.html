@@ -18,6 +18,9 @@
                 <li><a href="{{ url_for('main.index') }}" class="nav-link {% if request.endpoint == 'main.index' %}active{% endif %}">Главная</a></li>
                 <li><a href="{{ url_for('projects.list_projects') }}" class="nav-link {% if 'projects' in request.endpoint %}active{% endif %}">Проекты</a></li>
                 <li><a href="{{ url_for('tasks.list_tasks') }}" class="nav-link {% if 'tasks' in request.endpoint %}active{% endif %}">Задачи</a></li>
+                {% if current_user.role == ROLE_STUDENT and current_user.id %}
+                <li><a href="{{ url_for('students.view_student', student_id=current_user.id) }}" class="nav-link {% if request.endpoint == 'students.view_student' %}active{% endif %}">Мой профиль</a></li>
+                {% endif %}
                 {% if current_user.role == ROLE_TEACHER %}
                 <li><a href="{{ url_for('students.supervised_students_list') }}" class="nav-link {% if request.endpoint == 'students.supervised_students_list' %}active{% endif %}">Мои студенты</a></li>
                 {% endif %}
@@ -33,7 +36,12 @@
             </ul>
             <div class="auth-panel">
                 <div class="auth-user">
-                    <strong>{{ current_user.role_label }}</strong>: {{ current_user.name }}
+                    <strong>{{ current_user.role_label }}</strong>:
+                    {% if current_user.role == ROLE_STUDENT and current_user.id %}
+                    <a href="{{ url_for('students.view_student', student_id=current_user.id) }}" class="link">{{ current_user.name }}</a>
+                    {% else %}
+                    {{ current_user.name }}
+                    {% endif %}
                 </div>
                 <form method="post" action="{{ url_for('auth.logout') }}">
                     <button type="submit" class="btn btn-secondary btn-sm">Выйти</button>

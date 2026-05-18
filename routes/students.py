@@ -299,6 +299,50 @@ def add_consultation(student_id):
     return redirect(url_for('students.view_student', student_id=student_id))
 
 
+@students_bp.route(
+    '/<int:student_id>/consultations/<int:consultation_id>/delete',
+    methods=['POST'],
+)
+@roles_required(ROLE_TEACHER)
+def delete_consultation(student_id, consultation_id):
+    teacher_id = g.current_user.get('id')
+    if not teacher_id or not teacher_supervises_student(teacher_id, student_id):
+        flash(
+            'Можно изменять записи только по студентам из ваших проектов',
+            'error',
+        )
+        return redirect(url_for('main.index'))
+
+    row = execute_query(
+        """
+        SELECT id FROM consultation
+        WHERE id = %s AND teacher_id = %s AND student_id = %s
+        """,
+        (consultation_id, teacher_id, student_id),
+        fetch_one=True,
+    )
+    if not row:
+        flash('Запись консультации не найдена', 'error')
+        return redirect(url_for('students.view_student', student_id=student_id))
+
+    execute_query(
+        "DELETE FROM consultation WHERE id = %s",
+        (consultation_id,),
+        commit=True,
+    )
+
+    project_id = _first_supervised_project_id(teacher_id, student_id)
+    log_activity(
+        'consultation_deleted',
+        'Удалена запись консультации',
+        current_user=g.current_user,
+        project_id=project_id,
+        task_id=None,
+    )
+    flash('Запись консультации удалена', 'success')
+    return redirect(url_for('students.view_student', student_id=student_id))
+
+
 @students_bp.route('/<int:student_id>/edit', methods=['GET', 'POST'])
 @roles_required(ROLE_ADMIN)
 def edit_student(student_id):

@@ -125,6 +125,9 @@
         <h2 class="card-title">Быстрые действия</h2>
     </div>
     <div class="btn-group">
+        {% if is_student_dashboard and current_user.id %}
+        <a href="{{ url_for('students.view_student', student_id=current_user.id) }}" class="btn btn-primary">Мой профиль и консультации</a>
+        {% endif %}
         {% if can_manage_projects %}
         <a href="{{ url_for('projects.create_project') }}" class="btn btn-primary">Создать проект</a>
         <a href="{{ url_for('tasks.create_task') }}" class="btn btn-secondary">Добавить задачу</a>

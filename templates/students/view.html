@@ -86,6 +86,7 @@
                         <th>Дата</th>
                         <th>Длительность</th>
                         <th>Комментарий</th>
+                        <th></th>
                     </tr>
                 </thead>
                 <tbody>
@@ -94,6 +95,14 @@
                         <td>{{ c.consultation_date.strftime('%d.%m.%Y') if c.consultation_date else '-' }}</td>
                         <td>{{ (c.duration_minutes / 60) | round(2) }} ч ({{ c.duration_minutes }} мин)</td>
                         <td>{{ c.note or '—' }}</td>
+                        <td>
+                            <form method="POST"
+                                  action="{{ url_for('students.delete_consultation', student_id=student.id, consultation_id=c.id) }}"
+                                  style="display: inline;"
+                                  onsubmit="return confirm('Удалить эту запись консультации?')">
+                                <button type="submit" class="btn btn-danger btn-sm">Удалить</button>
+                            </form>
+                        </td>
                     </tr>
                     {% endfor %}
                 </tbody>

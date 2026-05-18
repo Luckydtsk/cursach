@@ -36,7 +36,7 @@
                     <td>{{ project.supervisor_name or 'Не назначен' }}</td>
                     <td>{{ project.end_date.strftime('%d.%m.%Y') if project.end_date else '-' }}</td>
                     <td>
-                        <span class="badge badge-status" style="background-color: {{ project.status_color or '#6B7280' }}">
+                        <span class="badge badge-status" {{ {'style': 'background-color: ' ~ (project.status_color or '#6B7280') } | xmlattr }}>
                             {{ project.status or 'Не указан' }}
                         </span>
                     </td>
