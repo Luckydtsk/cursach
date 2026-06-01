@@ -1,4 +1,5 @@
 {% extends 'base.html' %}
+{% from 'reports/_export_buttons.html' import export_buttons %}
 
 {% block title %}Отчет: Проекты по срокам сдачи{% endblock %}
 
@@ -10,8 +11,21 @@
 
 <div class="card">
     <p style="color: var(--text-secondary); margin-bottom: 1rem;">
-        Отчет показывает все проекты с информацией о руководителях, отсортированные по дате окончания (ближайшие сверху)
+        Отчет показывает проекты с информацией о руководителях. Выберите сортировку по дате сдачи (окончания проекта).
     </p>
+
+    <form method="GET" action="{{ url_for('reports.projects_by_deadline') }}" class="inline-form" style="margin-bottom: 1.5rem;">
+        <div class="form-group" style="margin-bottom: 0;">
+            <label class="form-label" for="sort">Сортировка по дате сдачи</label>
+            <select name="sort" id="sort" class="form-control" onchange="this.form.submit()">
+                <option value="asc" {% if sort_mode == 'asc' %}selected{% endif %}>По возрастанию (ближайшие сверху)</option>
+                <option value="desc" {% if sort_mode == 'desc' %}selected{% endif %}>По убыванию (дальние сверху)</option>
+                <option value="off" {% if sort_mode == 'off' %}selected{% endif %}>Без сортировки по дате</option>
+            </select>
+        </div>
+    </form>
+
+    {{ export_buttons('reports.export_projects_by_deadline', {'sort': sort_mode}) }}
     
     {% if projects %}
     <div class="table-container">

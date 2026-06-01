@@ -15,11 +15,13 @@
     </div>
     <div class="stat-card">
         <div class="stat-label">{% if is_student_dashboard %}Моих задач{% else %}В работе{% endif %}</div>
-        <div class="stat-value warning">{% if is_student_dashboard %}{{ tasks_stats.total or 0 }}{% else %}{{ projects_stats.in_progress or 0 }}{% endif %}</div>
+        <div class="stat-value warning">{% if is_student_dashboard %}{{ tasks_stats.total or 0 }}{% else %}{{
+            projects_stats.in_progress or 0 }}{% endif %}</div>
     </div>
     <div class="stat-card">
         <div class="stat-label">{% if is_student_dashboard %}Завершенных задач{% else %}Завершено{% endif %}</div>
-        <div class="stat-value success">{% if is_student_dashboard %}{{ tasks_stats.completed or 0 }}{% else %}{{ projects_stats.completed or 0 }}{% endif %}</div>
+        <div class="stat-value success">{% if is_student_dashboard %}{{ tasks_stats.completed or 0 }}{% else %}{{
+            projects_stats.completed or 0 }}{% endif %}</div>
     </div>
     <div class="stat-card">
         <div class="stat-label">{% if is_student_dashboard %}Однокомандников{% else %}Студентов{% endif %}</div>
@@ -28,15 +30,17 @@
 </div>
 
 <div class="detail-grid">
-    
+
     <div class="card">
         <div class="card-header">
-            <h2 class="card-title">{% if is_student_dashboard %}Мои ближайшие дедлайны{% else %}Ближайшие дедлайны{% endif %}</h2>
-            <a href="{{ url_for('tasks.list_tasks') if is_student_dashboard else url_for('projects.list_projects') }}" class="btn btn-secondary btn-sm">
+            <h2 class="card-title">{% if is_student_dashboard %}Мои ближайшие дедлайны{% else %}Ближайшие дедлайны{%
+                endif %}</h2>
+            <a href="{{ url_for('tasks.list_tasks') if is_student_dashboard else url_for('projects.list_projects') }}"
+                class="btn btn-secondary btn-sm">
                 {% if is_student_dashboard %}Все задачи{% else %}Все проекты{% endif %}
             </a>
         </div>
-        
+
         {% if upcoming_deadlines %}
         <div class="table-container">
             <table>
@@ -54,7 +58,8 @@
                     {% for project in upcoming_deadlines %}
                     <tr>
                         <td>
-                            <a href="{{ url_for('tasks.view_task', task_id=project.id) if is_student_dashboard else url_for('projects.view_project', project_id=project.id) }}" class="link">
+                            <a href="{{ url_for('tasks.view_task', task_id=project.id) if is_student_dashboard else url_for('projects.view_project', project_id=project.id) }}"
+                                class="link">
                                 {{ project.title }}
                             </a>
                         </td>
@@ -63,7 +68,7 @@
                         {% endif %}
                         <td>{{ project.end_date.strftime('%d.%m.%Y') if project.end_date else '-' }}</td>
                         <td>
-                            <span class="badge badge-status" style="background-color: {{ project.status_color or '#6B7280' }}">
+                            <span class="badge badge-status" {{ {'style': 'background-color: ' ~ (project.status_color or '#6B7280') } | xmlattr }}>
                                 {{ project.status or 'Не указан' }}
                             </span>
                         </td>
@@ -79,7 +84,7 @@
         {% endif %}
     </div>
 
-    
+
     <div class="card">
         <div class="card-header">
             <h2 class="card-title">Последняя активность</h2>
@@ -87,7 +92,7 @@
             <a href="{{ url_for('reports.activity_timeline') }}" class="btn btn-secondary btn-sm">Все события</a>
             {% endif %}
         </div>
-        
+
         {% if activities %}
         <ul class="activity-list">
             {% for activity in activities %}
@@ -104,7 +109,7 @@
                 <div class="activity-content">
                     <div class="activity-text">{{ activity.description }}</div>
                     <div class="activity-time">
-                        {{ activity.actor_name or 'Система' }} &middot; 
+                        {{ activity.actor_name or 'Система' }} &middot;
                         {{ activity.created_at.strftime('%d.%m.%Y %H:%M') if activity.created_at else '' }}
                     </div>
                 </div>
@@ -126,7 +131,8 @@
     </div>
     <div class="btn-group">
         {% if is_student_dashboard and current_user.id %}
-        <a href="{{ url_for('students.view_student', student_id=current_user.id) }}" class="btn btn-primary">Мой профиль и консультации</a>
+        <a href="{{ url_for('students.view_student', student_id=current_user.id) }}" class="btn btn-primary">Мой профиль
+            и консультации</a>
         {% endif %}
         {% if can_manage_projects %}
         <a href="{{ url_for('projects.create_project') }}" class="btn btn-primary">Создать проект</a>

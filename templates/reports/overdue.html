@@ -1,0 +1,62 @@
+{% extends 'base.html' %}
+{% from 'reports/_export_buttons.html' import export_buttons %}
+
+{% block title %}Отчет: Просроченные задачи{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <h1 class="page-title">Студенты с просроченными задачами</h1>
+    <a href="{{ url_for('reports.reports_index') }}" class="btn btn-secondary">Назад к отчетам</a>
+</div>
+
+<div class="card">
+    <p style="color: var(--text-secondary); margin-bottom: 1rem;">
+        Список студентов из команд проектов, у которых есть невыполненные задачи с истёкшим дедлайном.
+        {% if current_user.role == ROLE_TEACHER %}
+        Показаны только проекты, где вы руководитель.
+        {% endif %}
+    </p>
+
+    {{ export_buttons('reports.export_overdue_students') }}
+
+    {% if rows %}
+    <div class="table-container">
+        <table>
+            <thead>
+                <tr>
+                    <th>Студент</th>
+                    <th>Группа</th>
+                    <th>Email</th>
+                    <th>Проект</th>
+                    <th>Задача</th>
+                    <th>Дедлайн</th>
+                    <th>Статус</th>
+                    <th>Руководитель</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for r in rows %}
+                <tr>
+                    <td>{{ r.student_name }}</td>
+                    <td>{{ r.group_name or '-' }}</td>
+                    <td>{{ r.email }}</td>
+                    <td>{{ r.project_title }}</td>
+                    <td>{{ r.task_title }}</td>
+                    <td>{{ r.deadline.strftime('%d.%m.%Y') if r.deadline else '-' }}</td>
+                    <td>{{ r.task_status }}</td>
+                    <td>{{ r.supervisor_name or '-' }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border);">
+        <strong>Всего записей:</strong> {{ rows|length }}
+    </div>
+    {% else %}
+    <div class="empty-state">
+        <p>Просроченных задач не найдено</p>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

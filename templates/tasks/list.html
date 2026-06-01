@@ -11,6 +11,20 @@
 </div>
 
 <div class="card">
+    <form method="GET" action="{{ url_for('tasks.list_tasks') }}" class="inline-form" style="margin-bottom: 1.5rem;">
+        <div class="form-group" style="margin-bottom: 0;">
+            <label class="form-label" for="status_id">Фильтр по статусу</label>
+            <select name="status_id" id="status_id" class="form-control" onchange="this.form.submit()">
+                <option value="">Все статусы</option>
+                {% for status in statuses %}
+                <option value="{{ status.id }}" {% if status_filter == status.id %}selected{% endif %}>
+                    {{ status.name }}
+                </option>
+                {% endfor %}
+            </select>
+        </div>
+    </form>
+
     {% if tasks %}
     <div class="table-container">
         <table>
@@ -68,7 +82,7 @@
     {% else %}
     <div class="empty-state">
         <div class="empty-state-icon">&#9745;</div>
-        <p>Задачи не найдены</p>
+        <p>{% if status_filter %}Задач с выбранным статусом не найдено{% else %}Задачи не найдены{% endif %}</p>
         {% if can_manage_projects %}
         <a href="{{ url_for('tasks.create_task') }}" class="btn btn-primary" style="margin-top: 1rem;">Создать первую задачу</a>
         {% endif %}

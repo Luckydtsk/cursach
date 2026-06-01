@@ -1,0 +1,6 @@
+{% macro export_buttons(export_endpoint, query_params=None) %}
+<div class="btn-group" style="margin-bottom: 1rem; flex-wrap: wrap; gap: 0.5rem;">
+    <a href="{{ url_for(export_endpoint, format='xlsx', **(query_params or {})) }}" class="btn btn-secondary btn-sm">Скачать XLSX</a>
+    <a href="{{ url_for(export_endpoint, format='docx', **(query_params or {})) }}" class="btn btn-secondary btn-sm">Скачать DOCX</a>
+</div>
+{% endmacro %}

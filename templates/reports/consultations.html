@@ -1,4 +1,5 @@
 {% extends 'base.html' %}
+{% from 'reports/_export_buttons.html' import export_buttons %}
 
 {% block title %}Отчет: консультации - Система учета{% endblock %}
 
@@ -58,6 +59,10 @@
 
 <div class="card">
     <h3 class="card-title">Записи</h3>
+    {{ export_buttons('reports.export_consultations', {
+        'student_id': student_filter,
+        'teacher_id': teacher_filter
+    }) }}
     {% if rows %}
     <div class="table-container">
         <table>

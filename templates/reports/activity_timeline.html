@@ -1,4 +1,5 @@
 {% extends 'base.html' %}
+{% from 'reports/_export_buttons.html' import export_buttons %}
 
 {% block title %}Отчет: Хронология событий{% endblock %}
 
@@ -30,6 +31,12 @@
 </div>
 
 <div class="card">
+    {% if project_id %}
+    {{ export_buttons('reports.export_activity_timeline', {'project_id': project_id}) }}
+    {% else %}
+    {{ export_buttons('reports.export_activity_timeline') }}
+    {% endif %}
+
     {% if activities %}
     <div class="table-container">
         <table>

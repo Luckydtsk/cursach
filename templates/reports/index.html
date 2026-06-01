@@ -33,6 +33,14 @@
     </div>
 
     <div class="card">
+        <h3 class="card-title">Просроченные задачи</h3>
+        <p style="color: var(--text-secondary); margin: 1rem 0;">
+            Студенты с невыполненными задачами после дедлайна; выгрузка в XLSX и DOCX
+        </p>
+        <a href="{{ url_for('reports.overdue_students') }}" class="btn btn-primary">Открыть отчет</a>
+    </div>
+
+    <div class="card">
         <h3 class="card-title">Консультации с студентами</h3>
         <p style="color: var(--text-secondary); margin: 1rem 0;">
             Суммарные часы консультаций; для преподавателя — только его записи, с фильтром по студенту из своих проектов

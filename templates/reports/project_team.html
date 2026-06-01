@@ -1,4 +1,5 @@
 {% extends 'base.html' %}
+{% from 'reports/_export_buttons.html' import export_buttons %}
 
 {% block title %}Отчет: Состав команды проекта{% endblock %}
 
@@ -46,6 +47,7 @@
     </div>
     
     {% if team %}
+    {{ export_buttons('reports.export_project_team', {'project_id': project_id}) }}
     <h3 class="section-title">Участники команды ({{ team|length }})</h3>
     <div class="table-container">
         <table>

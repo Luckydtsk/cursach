@@ -38,79 +38,78 @@ def _can_submit_to_task(task_id, student_id):
     return bool(membership)
 
 
+_TASK_LIST_SELECT = """
+    SELECT 
+        t.id,
+        t.title,
+        t.description,
+        t.deadline,
+        t.priority,
+        t.status_id,
+        ts.name as status,
+        ts.color as status_color,
+        p.id as project_id,
+        p.title as project_title,
+        (SELECT GROUP_CONCAT(s.last_name || ' ' || SUBSTR(s.first_name, 1, 1) || '.', ', ')
+         FROM task_student ts2 
+         JOIN student s ON ts2.student_id = s.id 
+         WHERE ts2.task_id = t.id) as assignees
+    FROM task t
+    LEFT JOIN task_status ts ON t.status_id = ts.id
+    LEFT JOIN project p ON t.project_id = p.id
+"""
+
+
 @tasks_bp.route('/')
 def list_tasks():
+    status_filter = request.args.get('status_id', type=int)
+    statuses = execute_query(
+        "SELECT id, name, color FROM task_status ORDER BY id",
+        fetch_all=True,
+    )
+    if status_filter and not any(s["id"] == status_filter for s in (statuses or [])):
+        status_filter = None
+
+    status_clause = ""
+    status_params = ()
+    if status_filter:
+        status_clause = " AND t.status_id = %s"
+        status_params = (status_filter,)
+
     if g.current_user["role"] == ROLE_TEACHER:
-        tasks = execute_query("""
-            SELECT 
-                t.id,
-                t.title,
-                t.description,
-                t.deadline,
-                t.priority,
-                ts.name as status,
-                ts.color as status_color,
-                p.id as project_id,
-                p.title as project_title,
-                (SELECT GROUP_CONCAT(s.last_name || ' ' || SUBSTR(s.first_name, 1, 1) || '.', ', ')
-                 FROM task_student ts2 
-                 JOIN student s ON ts2.student_id = s.id 
-                 WHERE ts2.task_id = t.id) as assignees
-            FROM task t
-            LEFT JOIN task_status ts ON t.status_id = ts.id
-            LEFT JOIN project p ON t.project_id = p.id
-            WHERE p.supervisor_id = %s
+        query = _TASK_LIST_SELECT + """
+            WHERE p.supervisor_id = %s""" + status_clause + """
             ORDER BY t.priority DESC, t.deadline ASC
-        """, (g.current_user["id"],), fetch_all=True)
+        """
+        params = (g.current_user["id"],) + status_params
+        tasks = execute_query(query, params, fetch_all=True)
     elif g.current_user["role"] == ROLE_STUDENT:
-        tasks = execute_query("""
-            SELECT 
-                t.id,
-                t.title,
-                t.description,
-                t.deadline,
-                t.priority,
-                ts.name as status,
-                ts.color as status_color,
-                p.id as project_id,
-                p.title as project_title,
-                (SELECT GROUP_CONCAT(s.last_name || ' ' || SUBSTR(s.first_name, 1, 1) || '.', ', ')
-                 FROM task_student ts2 
-                 JOIN student s ON ts2.student_id = s.id 
-                 WHERE ts2.task_id = t.id) as assignees
-            FROM task t
-            LEFT JOIN task_status ts ON t.status_id = ts.id
-            LEFT JOIN project p ON t.project_id = p.id
+        query = _TASK_LIST_SELECT + """
             JOIN project_team pt_own ON pt_own.project_id = p.id
-            WHERE pt_own.student_id = %s
+            WHERE pt_own.student_id = %s""" + status_clause + """
             ORDER BY t.priority DESC, t.deadline ASC
-        """, (g.current_user["id"],), fetch_all=True)
+        """
+        params = (g.current_user["id"],) + status_params
+        tasks = execute_query(query, params, fetch_all=True)
     else:
-        tasks = execute_query("""
-            SELECT 
-                t.id,
-                t.title,
-                t.description,
-                t.deadline,
-                t.priority,
-                ts.name as status,
-                ts.color as status_color,
-                p.id as project_id,
-                p.title as project_title,
-                (SELECT GROUP_CONCAT(s.last_name || ' ' || SUBSTR(s.first_name, 1, 1) || '.', ', ')
-                 FROM task_student ts2 
-                 JOIN student s ON ts2.student_id = s.id 
-                 WHERE ts2.task_id = t.id) as assignees
-            FROM task t
-            LEFT JOIN task_status ts ON t.status_id = ts.id
-            LEFT JOIN project p ON t.project_id = p.id
-            ORDER BY t.priority DESC, t.deadline ASC
-        """, fetch_all=True)
-    
+        query = _TASK_LIST_SELECT
+        if status_filter:
+            query += " WHERE t.status_id = %s"
+            params = status_params
+        else:
+            params = ()
+        query += " ORDER BY t.priority DESC, t.deadline ASC"
+        tasks = execute_query(query, params, fetch_all=True)
+
     for task in tasks:
         task["can_edit"] = can_manage_task(task["id"])
 
-    return render_template('tasks/list.html', tasks=tasks)
+    return render_template(
+        'tasks/list.html',
+        tasks=tasks,
+        statuses=statuses or [],
+        status_filter=status_filter,
+    )
 
 
 @tasks_bp.route('/create', methods=['GET', 'POST'])
